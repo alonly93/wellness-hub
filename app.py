@@ -33,18 +33,13 @@ app = Flask(__name__)
 env = os.getenv('FLASK_ENV', 'development')
 app.config.from_object(config[env])
 
-# Initialize database
-
+db_file = os.path.join(app.root_path, 'app.db')
 db.init_app(app)
 
-# Create tables within app context
-with app.app_context():
-    db.create_all()
-    print("✅ Database tables created successfully!")
+if not os.path.exists(db_file):
+    with app.app_context():
+        db.create_all()
 
-# Create all database tables
-with app.app_context():
-       db.create_all()
 
 # ===================== ROUTES =====================
 
