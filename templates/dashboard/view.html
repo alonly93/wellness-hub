@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Wellness Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 Your Life Dashboard</h1>
+    <p>Track your progress and discover insights</p>
+</div>
+
+<div class="dashboard-actions">
+    <a href="{{ url_for('dashboard_log') }}" class="btn btn-primary">➕ Add Today's Log</a>
+    <a href="{{ url_for('dashboard_export') }}" class="btn btn-secondary">📥 Export CSV</a>
+</div>
+
+{% if no_data %}
+<div class="empty-state">
+    <div class="empty-icon">📊</div>
+    <h2>No data logged yet</h2>
+    <p>Start tracking your daily metrics to see insights!</p>
+    <a href="{{ url_for('dashboard_log') }}" class="btn btn-primary">Log Your First Day</a>
+</div>
+{% else %}
+
+<!-- Averages Section -->
+<div class="averages-section">
+    <h2>📈 Your Averages</h2>
+    <div class="averages-grid">
+        <div class="avg-card">
+            <div class="avg-icon">😴</div>
+            <div class="avg-value">{{ averages.sleep_hours }}</div>
+            <div class="avg-label">Hours Sleep</div>
+            <div class="avg-target">Target: 7-9</div>
+        </div>
+        
+        <div class="avg-card">
+            <div class="avg-icon">😊</div>
+            <div class="avg-value">{{ averages.mood_rating }}/10</div>
+            <div class="avg-label">Mood Rating</div>
+        </div>
+        
+        <div class="avg-card">
+            <div class="avg-icon">📚</div>
+            <div class="avg-value">{{ averages.study_hours }}</div>
+            <div class="avg-label">Study Hours</div>
+        </div>
+        
+        <div class="avg-card">
+            <div class="avg-icon">💧</div>
+            <div class="avg-value">{{ averages.water_intake }}</div>
+            <div class="avg-label">Glasses Water</div>
+            <div class="avg-target">Target: 8</div>
+        </div>
+        
+        <div class="avg-card">
+            <div class="avg-icon">💪</div>
+            <div class="avg-value">{{ averages.exercise_minutes }}</div>
+            <div class="avg-label">Exercise Min</div>
+            <div class="avg-target">Target: 30+</div>
+        </div>
+        
+        <div class="avg-card">
+            <div class="avg-icon">🚀</div>
+            <div class="avg-value">{{ averages.productivity_score }}%</div>
+            <div class="avg-label">Productivity</div>
+        </div>
+    </div>
+</div>
+
+<!-- Trends Section -->
+{% if trends %}
+<div class="trends-section">
+    <h2>📊 Weekly Trends</h2>
+    <div class="trends-grid">
+        {% for metric, data in trends.items() %}
+        <div class="trend-card trend-{{ data.trend }}">
+            <div class="trend-header">
+                <span class="trend-icon">
+                    {% if data.trend == 'improving' %}📈
+                    {% elif data.trend == 'declining' %}📉
+                    {% else %}➡️
+                    {% endif %}
+                </span>
+                <span class="trend-label">
+                    {% if metric == 'sleep_hours' %}Sleep
+                    {% elif metric == 'mood_rating' %}Mood
+                    {% elif metric == 'study_hours' %}Study
+                    {% elif metric == 'water_intake' %}Hydration
+                    {% elif metric == 'exercise_minutes' %}Exercise
+                    {% else %}Productivity
+                    {% endif %}
+                </span>
+            </div>
+            <div class="trend-status">{{ data.trend|title }}</div>
+            <div class="trend-change">
+                {% if data.change_percent > 0 %}+{% endif %}{{ data.change_percent }}%
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Insights Section -->
+{% if insights %}
+<div class="insights-section">
+    <h2>💡 Personalized Insights</h2>
+    <div class="insights-grid">
+        {% for insight in insights %}
+        <div class="insight-card">
+            <span class="insight-icon">{{ insight.icon }}</span>
+            <p>{{ insight.message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Badges Section -->
+{% if badges %}
+<div class="badges-section">
+    <h2>🏆 Your Achievements</h2>
+    <div class="badges-grid">
+        {% for badge in badges %}
+        <div class="badge-card">
+            <div class="badge-icon">{{ badge.icon }}</div>
+            <div class="badge-name">{{ badge.name }}</div>
+            <div class="badge-desc">{{ badge.description }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts Section -->
+<div class="charts-section">
+    <h2>📈 Visual Trends</h2>
+    
+    <div class="chart-container">
+        <div class="chart-card">
+            <h3>Sleep & Mood Patterns</h3>
+            <canvas id="sleepMoodChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-card">
+            <h3>Exercise & Productivity</h3>
+            <canvas id="exerciseProductivityChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-card">
+            <h3>Study Hours</h3>
+            <canvas id="studyChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-card">
+            <h3>Hydration Tracking</h3>
+            <canvas id="waterChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Logs Table -->
+<div class="logs-table-section">
+    <h2>📋 Recent Logs (Last 7 Days)</h2>
+    <div class="table-responsive">
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sleep</th>
+                    <th>Mood</th>
+                    <th>Study</th>
+                    <th>Water</th>
+                    <th>Exercise</th>
+                    <th>Productivity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.date }}</td>
+                    <td>{{ log.sleep_hours }}h</td>
+                    <td>
+                        <span class="mood-indicator mood-{{ log.mood_rating }}">
+                            {{ log.mood_rating }}/10
+                        </span>
+                    </td>
+                    <td>{{ log.study_hours }}h</td>
+                    <td>{{ log.water_intake }} glasses</td>
+                    <td>{{ log.exercise_minutes }} min</td>
+                    <td>
+                        <div class="mini-progress-bar">
+                            <div class="mini-progress-fill" style="width: {{ log.productivity_score }}%"></div>
+                        </div>
+                        {{ log.productivity_score }}%
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if not no_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const dates = {{ chart_data.dates | tojson }};
+
+// Sleep & Mood Chart
+const sleepMoodCtx = document.getElementById('sleepMoodChart').getContext('2d');
+new Chart(sleepMoodCtx, {
+    type: 'line',
+    data: {
+        labels: dates,
+        datasets: [{
+            label: 'Sleep Hours',
+            data: {{ chart_data.sleep | tojson }},
+            borderColor: '#9370DB',
+            backgroundColor: 'rgba(147, 112, 219, 0.1)',
+            yAxisID: 'y',
+            tension: 0.4
+        }, {
+            label: 'Mood Rating',
+            data: {{ chart_data.mood | tojson }},
+            borderColor: '#FF69B4',
+            backgroundColor: 'rgba(255, 105, 180, 0.1)',
+            yAxisID: 'y1',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: 'Sleep Hours' }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: { display: true, text: 'Mood Rating' },
+                grid: { drawOnChartArea: false }
+            }
+        }
+    }
+});
+
+// Exercise & Productivity Chart
+const exerciseProductivityCtx = document.getElementById('exerciseProductivityChart').getContext('2d');
+new Chart(exerciseProductivityCtx, {
+    type: 'bar',
+    data: {
+        labels: dates,
+        datasets: [{
+            label: 'Exercise Minutes',
+            data: {{ chart_data.exercise | tojson }},
+            backgroundColor: 'rgba(255, 182, 193, 0.7)',
+            yAxisID: 'y'
+        }, {
+            label: 'Productivity Score',
+            data: {{ chart_data.productivity | tojson }},
+            backgroundColor: 'rgba(221, 160, 221, 0.7)',
+            yAxisID: 'y1'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: 'Exercise (min)' }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: { display: true, text: 'Productivity (%)' },
+                grid: { drawOnChartArea: false }
+            }
+        }
+    }
+});
+
+// Study Chart
+const studyCtx = document.getElementById('studyChart').getContext('2d');
+new Chart(studyCtx, {
+    type: 'line',
+    data: {
+        labels: dates,
+        datasets: [{
+            label: 'Study Hours',
+            data: {{ chart_data.study | tojson }},
+            borderColor: '#87CEEB',
+            backgroundColor: 'rgba(135, 206, 235, 0.2)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+
+// Water Chart
+const waterCtx = document.getElementById('waterChart').getContext('2d');
+new Chart(waterCtx, {
+    type: 'bar',
+    data: {
+        labels: dates,
+        datasets: [{
+            label: 'Glasses of Water',
+            data: {{ chart_data.water | tojson }},
+            backgroundColor: 'rgba(100, 149, 237, 0.7)',
+            borderColor: '#6495ED',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Glasses' }
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Your Personal Wellness Journey Starts Here ✨</h1>
+        <p class="hero-subtitle">Track your health, nourish your body, and nurture your mind—all in one beautiful space</p>
+        <div class="hero-buttons">
+            <a href="#features" class="btn btn-primary">Explore Features</a>
+        </div>
+    </div>
+</div>
+
+<section id="features" class="features-section">
+    <h2 class="section-title">Everything You Need to Thrive 🌸</h2>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">💪</div>
+            <h3>Fitness & Meal Planner</h3>
+            <p>Get personalized meal plans tailored to your goals, dietary needs, and lifestyle. Track your nutrition with beautiful, easy-to-follow plans.</p>
+            <ul class="feature-list">
+                <li>✓ Calculate BMI & daily calorie needs</li>
+                <li>✓ 7-day customized meal plans</li>
+                <li>✓ Macro tracking (protein, carbs, fats)</li>
+                <li>✓ Download meal plans as PDF</li>
+                <li>✓ Swap meals & generate grocery lists</li>
+            </ul>
+            <a href="{{ url_for('fitness_input') }}" class="btn btn-secondary">Start Planning</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3>Mental Health Journal</h3>
+            <p>Express yourself freely and track your emotional wellbeing. Our smart journal analyzes your mood and helps you understand your patterns.</p>
+            <ul class="feature-list">
+                <li>✓ Private & secure daily journaling</li>
+                <li>✓ Automatic mood analysis</li>
+                <li>✓ Sentiment trends & insights</li>
+                <li>✓ Weekly mood summaries</li>
+                <li>✓ Keyword extraction & tag clouds</li>
+            </ul>
+            <a href="{{ url_for('journal_write') }}" class="btn btn-secondary">Start Writing</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Life Dashboard</h3>
+            <p>See the big picture with comprehensive tracking of sleep, mood, productivity, and more. Discover what helps you feel your best.</p>
+            <ul class="feature-list">
+                <li>✓ Track sleep, mood, & productivity</li>
+                <li>✓ Beautiful visual charts</li>
+                <li>✓ Find correlations & patterns</li>
+                <li>✓ Weekly progress reports</li>
+                <li>✓ Achievement badges & streaks</li>
+            </ul>
+            <a href="{{ url_for('dashboard_log') }}" class="btn btn-secondary">View Dashboard</a>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="cta-content">
+        <h2>Ready to Transform Your Wellness Journey?</h2>
+        <p>Join thousands of users who are already living their healthiest, happiest lives.</p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('fitness_input') }}" class="btn btn-large">Get Started Free</a>
+        </div>
+    </div>
+</section>
+
+<section class="benefits-section">
+    <h2 class="section-title">Why Choose Wellness Hub? 💖</h2>
+    <div class="benefits-grid">
+        <div class="benefit">
+            <span class="benefit-icon">🎨</span>
+            <h4>Beautiful Design</h4>
+            <p>Enjoy a gorgeous, intuitive interface designed with your experience in mind</p>
+        </div>
+        <div class="benefit">
+            <span class="benefit-icon">🔒</span>
+            <h4>Privacy First</h4>
+            <p>Your data stays yours—stored securely and privately</p>
+        </div>
+        <div class="benefit">
+            <span class="benefit-icon">📱</span>
+            <h4>Easy to Use</h4>
+            <p>Simple, straightforward tools that work the way you think</p>
+        </div>
+        <div class="benefit">
+            <span class="benefit-icon">🎯</span>
+            <h4>Personalized</h4>
+            <p>Customized insights and recommendations just for you</p>
+        </div>
+        <div class="benefit">
+            <span class="benefit-icon">📈</span>
+            <h4>Track Progress</h4>
+            <p>See your growth over time with detailed analytics</p>
+        </div>
+        <div class="benefit">
+            <span class="benefit-icon">✨</span>
+            <h4>All-in-One</h4>
+            <p>Everything you need in one integrated platform</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

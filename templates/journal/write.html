@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Journal - Wellness Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/journal.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📝 Your Personal Journal</h1>
+    <p>{% if editing %}Edit your thoughts{% else %}Express yourself freely{% endif %}</p>
+    {% if streak and streak > 0 %}
+    <div class="streak-badge">🔥 {{ streak }} day streak!</div>
+    {% endif %}
+</div>
+
+<div class="journal-container">
+    <div class="journal-sidebar">
+        <div class="sidebar-section">
+            <h3>Quick Actions</h3>
+            <a href="{{ url_for('journal_entries') }}" class="sidebar-link">
+                📚 View All Entries
+            </a>
+            <a href="{{ url_for('journal_analysis') }}" class="sidebar-link">
+                📊 Mood Analysis
+            </a>
+            <a href="{{ url_for('journal_download') }}" class="sidebar-link">
+                📥 Download Journal
+            </a>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3>✨ Journal Prompts</h3>
+            <div class="prompts-list">
+                <button class="prompt-btn" onclick="insertPrompt('What am I grateful for today?')">
+                    What am I grateful for today?
+                </button>
+                <button class="prompt-btn" onclick="insertPrompt('How am I feeling right now?')">
+                    How am I feeling right now?
+                </button>
+                <button class="prompt-btn" onclick="insertPrompt('What made me smile today?')">
+                    What made me smile today?
+                </button>
+                <button class="prompt-btn" onclick="insertPrompt('What challenges did I face?')">
+                    What challenges did I face?
+                </button>
+                <button class="prompt-btn" onclick="insertPrompt('What did I learn today?')">
+                    What did I learn today?
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="journal-main">
+        <form action="{% if editing %}{{ url_for('journal_update', entry_id=entry.id) }}{% else %}{{ url_for('journal_save') }}{% endif %}" 
+              method="POST" class="journal-form">
+            <div class="form-group">
+                <label for="title">Entry Title</label>
+                <input type="text" 
+                       id="title" 
+                       name="title" 
+                       placeholder="Give your entry a title..."
+                       value="{% if entry %}{{ entry.title }}{% endif %}"
+                       required>
+            </div>
+            
+            <div class="form-group">
+                <label for="content">Your Thoughts</label>
+                <textarea id="content" 
+                          name="content" 
+                          rows="15" 
+                          placeholder="Start writing... How was your day? What are you feeling?"
+                          required>{% if entry %}{{ entry.content }}{% endif %}</textarea>
+                <div class="char-count">
+                    <span id="word-count">0</span> words | 
+                    <span id="char-count">0</span> characters
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% if editing %}💾 Update Entry{% else %}✨ Save Entry{% endif %}
+                </button>
+                {% if editing %}
+                <a href="{{ url_for('journal_entries') }}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                <button type="reset" class="btn btn-secondary">Clear</button>
+                {% endif %}
+            </div>
+        </form>
+        
+        <div class="writing-tips">
+            <h4>💡 Writing Tips</h4>
+            <ul>
+                <li>Write freely without judgment</li>
+                <li>Be honest with your feelings</li>
+                <li>There's no right or wrong way to journal</li>
+                <li>Reflect on both positive and challenging moments</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const textarea = document.getElementById('content');
+const wordCount = document.getElementById('word-count');
+const charCount = document.getElementById('char-count');
+
+function updateCounts() {
+    const text = textarea.value;
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    const chars = text.length;
+    
+    wordCount.textContent = words;
+    charCount.textContent = chars;
+}
+
+textarea.addEventListener('input', updateCounts);
+updateCounts();
+
+function insertPrompt(prompt) {
+    const content = textarea.value;
+    if (content.trim().length > 0) {
+        textarea.value = content + '\n\n' + prompt + '\n';
+    } else {
+        textarea.value = prompt + '\n';
+    }
+    textarea.focus();
+    updateCounts();
+}
+</script>
+{% endblock %}

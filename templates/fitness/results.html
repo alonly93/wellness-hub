@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Your Meal Plan - Wellness Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fitness.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>✨ Your Personalized Meal Plan</h1>
+    <p>Here's your custom 7-day plan based on your goals!</p>
+</div>
+
+<div class="profile-summary">
+    <h2>📊 Your Fitness Profile</h2>
+    <div class="profile-grid">
+        <div class="profile-stat">
+            <span class="stat-label">BMI</span>
+            <span class="stat-value">{{ profile.bmi }}</span>
+            <span class="stat-category">{{ profile.bmi_category }}</span>
+        </div>
+        
+        <div class="profile-stat">
+            <span class="stat-label">Daily Calories</span>
+            <span class="stat-value">{{ profile.calorie_goal }}</span>
+            <span class="stat-category">calories/day</span>
+        </div>
+        
+        <div class="profile-stat">
+            <span class="stat-label">Protein</span>
+            <span class="stat-value">{{ profile.macros.protein }}g</span>
+            <span class="stat-category">per day</span>
+        </div>
+        
+        <div class="profile-stat">
+            <span class="stat-label">Carbs</span>
+            <span class="stat-value">{{ profile.macros.carbs }}g</span>
+            <span class="stat-category">per day</span>
+        </div>
+        
+        <div class="profile-stat">
+            <span class="stat-label">Fats</span>
+            <span class="stat-value">{{ profile.macros.fats }}g</span>
+            <span class="stat-category">per day</span>
+        </div>
+        
+        <div class="profile-stat">
+            <span class="stat-label">BMR</span>
+            <span class="stat-value">{{ profile.bmr }}</span>
+            <span class="stat-category">calories/day</span>
+        </div>
+    </div>
+</div>
+
+<div class="actions-bar">
+    <a href="{{ url_for('fitness_download_pdf') }}" class="btn btn-primary">
+        📥 Download as PDF
+    </a>
+    <a href="#grocery-list" class="btn btn-secondary">
+        🛒 View Grocery List
+    </a>
+    <a href="{{ url_for('fitness_input') }}" class="btn btn-secondary">
+        🔄 Create New Plan
+    </a>
+</div>
+
+<div class="meal-plan-container">
+    <h2>🍽️ Your 7-Day Meal Plan</h2>
+    
+    {% for day in meal_plan %}
+    <div class="day-card">
+        <div class="day-header">
+            <h3>Day {{ day.day }}</h3>
+            <div class="day-total">
+                <span class="total-calories">{{ day.daily_total.calories }} cal</span>
+                <span class="total-macros">
+                    P: {{ day.daily_total.protein }}g | 
+                    C: {{ day.daily_total.carbs }}g | 
+                    F: {{ day.daily_total.fats }}g
+                </span>
+            </div>
+        </div>
+        
+        <div class="meals-grid">
+            {% for meal_type in ['breakfast', 'lunch', 'dinner', 'snack'] %}
+            <div class="meal-card">
+                <div class="meal-header">
+                    <h4>
+                        {% if meal_type == 'breakfast' %}🌅 Breakfast
+                        {% elif meal_type == 'lunch' %}☀️ Lunch
+                        {% elif meal_type == 'dinner' %}🌙 Dinner
+                        {% else %}🍎 Snack
+                        {% endif %}
+                    </h4>
+                    <button class="swap-btn" 
+                            onclick="swapMeal({{ day.day }}, '{{ meal_type }}')">
+                        🔄 Swap
+                    </button>
+                </div>
+                
+                <div class="meal-content" id="meal-{{ day.day }}-{{ meal_type }}">
+                    <h5>{{ day[meal_type].name }}</h5>
+                    <div class="meal-nutrition">
+                        <span class="nutrition-item">
+                            <strong>{{ day[meal_type].calories }}</strong> cal
+                        </span>
+                        <span class="nutrition-item">
+                            P: {{ day[meal_type].protein }}g
+                        </span>
+                        <span class="nutrition-item">
+                            C: {{ day[meal_type].carbs }}g
+                        </span>
+                        <span class="nutrition-item">
+                            F: {{ day[meal_type].fats }}g
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div id="grocery-list" class="grocery-section">
+    <h2>🛒 Your Grocery List</h2>
+    <p class="section-description">Based on the meals in your plan</p>
+    
+    <div class="grocery-list">
+        {% for item in grocery_list %}
+        <div class="grocery-item">
+            <input type="checkbox" id="item-{{ loop.index }}">
+            <label for="item-{{ loop.index }}">{{ item }}</label>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="tips-section">
+    <h2>💡 Helpful Tips</h2>
+    <div class="tips-grid">
+        <div class="tip-card">
+            <span class="tip-icon">💧</span>
+            <p>Drink at least 8 glasses of water daily</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">🥘</span>
+            <p>Meal prep on Sundays to save time</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">👂</span>
+            <p>Listen to your body and adjust portions</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">🏋️‍♀️</span>
+            <p>Combine with regular exercise</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function swapMeal(day, mealType) {
+    const response = await fetch('/fitness/swap-meal', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ day: day, meal_type: mealType })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+        const mealCard = document.getElementById(`meal-${day}-${mealType}`);
+        const meal = data.new_meal;
+        
+        mealCard.innerHTML = `
+            <h5>${meal.name}</h5>
+            <div class="meal-nutrition">
+                <span class="nutrition-item">
+                    <strong>${meal.calories}</strong> cal
+                </span>
+                <span class="nutrition-item">
+                    P: ${meal.protein}g
+                </span>
+                <span class="nutrition-item">
+                    C: ${meal.carbs}g
+                </span>
+                <span class="nutrition-item">
+                    F: ${meal.fats}g
+                </span>
+            </div>
+        `;
+        
+        // Update day total
+        const dayCard = mealCard.closest('.day-card');
+        const totalEl = dayCard.querySelector('.day-total');
+        totalEl.innerHTML = `
+            <span class="total-calories">${data.daily_total.calories} cal</span>
+            <span class="total-macros">
+                P: ${data.daily_total.protein}g | 
+                C: ${data.daily_total.carbs}g | 
+                F: ${data.daily_total.fats}g
+            </span>
+        `;
+        
+        // Show success message
+        alert('Meal swapped successfully! ✨');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Log - Wellness Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 Track Your Day</h1>
+    <p>Log your daily metrics to see your progress</p>
+</div>
+
+<div class="log-actions">
+    <a href="{{ url_for('dashboard_view') }}" class="btn btn-primary">📈 View Dashboard</a>
+</div>
+
+<div class="log-container">
+    <form action="{{ url_for('dashboard_save') }}" method="POST" class="log-form">
+        <div class="form-section">
+            <h3>📅 Date</h3>
+            <div class="form-group">
+                <input type="date" 
+                       id="date" 
+                       name="date" 
+                       value="{{ today if today else '' }}" 
+                       max="{{ today if today else '' }}"
+                       required>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>😴 Sleep</h3>
+            <div class="form-group">
+                <label for="sleep_hours">Hours of Sleep</label>
+                <input type="number" 
+                       id="sleep_hours" 
+                       name="sleep_hours" 
+                       min="0" 
+                       max="24" 
+                       step="0.5" 
+                       value="7"
+                       required>
+                <input type="range" 
+                       min="0" 
+                       max="12" 
+                       step="0.5" 
+                       value="7"
+                       oninput="document.getElementById('sleep_hours').value = this.value">
+                <small>Target: 7-9 hours</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>😊 Mood</h3>
+            <div class="form-group">
+                <label for="mood_rating">Mood Rating (1-10)</label>
+                <div class="mood-selector">
+                    <div class="mood-options">
+                        {% for i in range(1, 11) %}
+                        <label class="mood-option">
+                            <input type="radio" name="mood_rating" value="{{ i }}" {% if i == 7 %}checked{% endif %}>
+                            <span class="mood-emoji">
+                                {% if i <= 2 %}😢
+                                {% elif i <= 4 %}😔
+                                {% elif i <= 6 %}😐
+                                {% elif i <= 8 %}🙂
+                                {% else %}😊
+                                {% endif %}
+                            </span>
+                            <span class="mood-number">{{ i }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>📚 Study Time</h3>
+            <div class="form-group">
+                <label for="study_hours">Hours Studied</label>
+                <input type="number" 
+                       id="study_hours" 
+                       name="study_hours" 
+                       min="0" 
+                       max="24" 
+                       step="0.5" 
+                       value="3"
+                       required>
+                <input type="range" 
+                       min="0" 
+                       max="12" 
+                       step="0.5" 
+                       value="3"
+                       oninput="document.getElementById('study_hours').value = this.value">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>💧 Hydration</h3>
+            <div class="form-group">
+                <label for="water_intake">Glasses of Water</label>
+                <input type="number" 
+                       id="water_intake" 
+                       name="water_intake" 
+                       min="0" 
+                       max="20" 
+                       value="8"
+                       required>
+                <div class="water-visualization" id="water-viz">
+                    <!-- Water glasses will be added by JavaScript -->
+                </div>
+                <small>Target: 8 glasses/day</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>💪 Exercise</h3>
+            <div class="form-group">
+                <label for="exercise_minutes">Exercise Minutes</label>
+                <input type="number" 
+                       id="exercise_minutes" 
+                       name="exercise_minutes" 
+                       min="0" 
+                       max="480" 
+                       step="5" 
+                       value="30"
+                       required>
+                <input type="range" 
+                       min="0" 
+                       max="120" 
+                       step="5" 
+                       value="30"
+                       oninput="document.getElementById('exercise_minutes').value = this.value">
+                <small>Target: 30+ minutes/day</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>🚀 Productivity</h3>
+            <div class="form-group">
+                <label for="productivity_score">Productivity Score (0-100)</label>
+                <input type="number" 
+                       id="productivity_score" 
+                       name="productivity_score" 
+                       min="0" 
+                       max="100" 
+                       value="70"
+                       required>
+                <input type="range" 
+                       min="0" 
+                       max="100" 
+                       step="5" 
+                       value="70"
+                       oninput="document.getElementById('productivity_score').value = this.value">
+                <div class="productivity-indicator">
+                    <div class="productivity-bar" style="width: 70%" id="prod-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">💾 Save Daily Log</button>
+            <button type="reset" class="btn btn-secondary">Clear</button>
+        </div>
+    </form>
+</div>
+
+<div class="quick-tips">
+    <h3>💡 Quick Tips</h3>
+    <ul>
+        <li>Log your data at the same time each day for consistency</li>
+        <li>Be honest with yourself - this is for your benefit!</li>
+        <li>Check your dashboard regularly to spot patterns</li>
+        <li>Small improvements add up over time</li>
+    </ul>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set today's date
+document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+// Water visualization
+function updateWaterViz() {
+    const glasses = parseInt(document.getElementById('water_intake').value);
+    const viz = document.getElementById('water-viz');
+    
+    let html = '';
+    for (let i = 0; i < Math.min(glasses, 12); i++) {
+        html += '<span class="water-glass">💧</span>';
+    }
+    viz.innerHTML = html;
+}
+
+document.getElementById('water_intake').addEventListener('input', updateWaterViz);
+updateWaterViz();
+
+// Productivity bar
+document.getElementById('productivity_score').addEventListener('input', function() {
+    document.getElementById('prod-bar').style.width = this.value + '%';
+});
+</script>
+{% endblock %}

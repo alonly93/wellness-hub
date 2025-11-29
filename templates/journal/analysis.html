@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Mood Analysis - Wellness Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/journal.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 Your Mood Analysis</h1>
+    <p>Understand your emotional patterns</p>
+</div>
+
+<div class="analysis-actions">
+    <a href="{{ url_for('journal_write') }}" class="btn btn-secondary">✍️ New Entry</a>
+    <a href="{{ url_for('journal_entries') }}" class="btn btn-secondary">📚 View Entries</a>
+</div>
+
+{% if no_data %}
+<div class="empty-state">
+    <div class="empty-icon">📊</div>
+    <h2>No data to analyze yet</h2>
+    <p>Write a few journal entries to see your mood trends!</p>
+    <a href="{{ url_for('journal_write') }}" class="btn btn-primary">Start Writing</a>
+</div>
+{% else %}
+
+<div class="summary-card">
+    <h2>📝 Weekly Summary</h2>
+    <p class="summary-text">{{ weekly_summary }}</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-value">{{ trend_data.total_entries }}</div>
+        <div class="stat-label">Total Entries</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">😊</div>
+        <div class="stat-value">{{ trend_data.sentiment_distribution.get('positive', 0) }}</div>
+        <div class="stat-label">Positive Days</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">😐</div>
+        <div class="stat-value">{{ trend_data.sentiment_distribution.get('neutral', 0) }}</div>
+        <div class="stat-label">Neutral Days</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">😔</div>
+        <div class="stat-value">{{ trend_data.sentiment_distribution.get('negative', 0) }}</div>
+        <div class="stat-label">Challenging Days</div>
+    </div>
+</div>
+
+<div class="charts-container">
+    <div class="chart-card">
+        <h3>📈 Mood Over Time</h3>
+        <canvas id="moodChart"></canvas>
+    </div>
+    
+    <div class="chart-card">
+        <h3>📊 Sentiment Distribution</h3>
+        <canvas id="sentimentChart"></canvas>
+    </div>
+</div>
+
+<div class="keywords-section">
+    <h2>🔤 Common Themes</h2>
+    <p class="section-description">Words you use most often in your journal</p>
+    <div class="keywords-cloud">
+        {% for word, freq in keywords %}
+        <span class="keyword" style="font-size: {{ 12 + (freq * 4) }}px;">
+            {{ word }} ({{ freq }})
+        </span>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="best-worst-days">
+    {% if trend_data.best_day %}
+    <div class="day-highlight best-day">
+        <h3>✨ Your Best Day</h3>
+        <p class="day-date">{{ trend_data.best_day[0] }}</p>
+        <p class="day-score">Mood Score: {{ '%.2f'|format(trend_data.best_day[1]) }}</p>
+    </div>
+    {% endif %}
+    
+    {% if trend_data.worst_day %}
+    <div class="day-highlight worst-day">
+        <h3>💙 Day That Needed Extra Care</h3>
+        <p class="day-date">{{ trend_data.worst_day[0] }}</p>
+        <p class="day-score">Mood Score: {{ '%.2f'|format(trend_data.worst_day[1]) }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="insights-section">
+    <h2>💡 Insights</h2>
+    <div class="insights-list">
+        <div class="insight-card">
+            <span class="insight-icon">📝</span>
+            <p>Regular journaling helps you understand your emotions better</p>
+        </div>
+        <div class="insight-card">
+            <span class="insight-icon">🌱</span>
+            <p>Every entry is a step toward greater self-awareness</p>
+        </div>
+        <div class="insight-card">
+            <span class="insight-icon">💖</span>
+            <p>Be kind to yourself on challenging days</p>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if not no_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Mood over time chart
+const moodCtx = document.getElementById('moodChart').getContext('2d');
+new Chart(moodCtx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_data.dates | tojson }},
+        datasets: [{
+            label: 'Mood Score',
+            data: {{ chart_data.scores | tojson }},
+            borderColor: '#FF69B4',
+            backgroundColor: 'rgba(255, 105, 180, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                min: -1,
+                max: 1,
+                ticks: {
+                    callback: function(value) {
+                        if (value > 0.5) return 'Very Positive';
+                        if (value > 0) return 'Positive';
+                        if (value > -0.5) return 'Neutral';
+                        return 'Negative';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Sentiment distribution chart
+const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+new Chart(sentimentCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ chart_data.sentiment_labels | tojson }},
+        datasets: [{
+            data: {{ chart_data.sentiment_counts | tojson }},
+            backgroundColor: [
+                '#90EE90',  // Positive - light green
+                '#FFD700',  // Neutral - gold
+                '#FFB6C1'   // Negative - light pink
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
+                       oninput="document.getElementById('study_hours').value = this.value">
+                <small>Recommended: 2-4 hours</small>
+            </div>
+        </div>

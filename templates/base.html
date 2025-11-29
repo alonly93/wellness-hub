@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wellness Hub{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('landing') }}" class="logo">✨ Wellness Hub</a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('fitness_input') }}">💪 Fitness</a></li>
+                <li><a href="{{ url_for('journal_write') }}">📝 Journal</a></li>
+                <li><a href="{{ url_for('dashboard_log') }}">📊 Dashboard</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 Wellness Hub. Made with 💖 for your wellbeing.</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
