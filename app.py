@@ -34,11 +34,17 @@ env = os.getenv('FLASK_ENV', 'development')
 app.config.from_object(config[env])
 
 # Initialize database
+
 db.init_app(app)
+
+# Create tables within app context
+with app.app_context():
+    db.create_all()
+    print("✅ Database tables created successfully!")
 
 # Create all database tables
 with app.app_context():
-    db.create_all()
+       db.create_all()
 
 # ===================== ROUTES =====================
 
